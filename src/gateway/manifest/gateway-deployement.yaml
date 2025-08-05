@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: r0h17h/gateway:latest
+          image: r0h17h/gateway:prod2
           envFrom:
             - configMapRef:
                 name: gateway-configmap

@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
         - name: auth
-          image: r0h17h/auth:prod
+          image: r0h17h/auth:latest
           ports:
             - containerPort: 6000
           envFrom:

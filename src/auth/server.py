@@ -4,18 +4,16 @@ import jwt,os,datetime
 
 
 server = Flask(__name__)
-mysql = MySQL(server)
 
 
 server.config["MYSQL_HOST"] = os.environ.get("MYSQL_HOST")
 server.config["MYSQL_USER"] = os.environ.get("MYSQL_USER")
 server.config["MYSQL_PASSWORD"] = os.environ.get("MYSQL_PASSWORD")
 server.config["MYSQL_DB"] = os.environ.get("MYSQL_DB")
-server.config["MYSQL_PORT"] = int(os.environ.get("MYSQL_PORT", "3306"))
+server.config["MYSQL_PORT"] = int(os.environ.get("MYSQL_PORT", 3306))
 
 
-
-
+mysql = MySQL(server)
 @server.route("/",methods=["GET"])
 def home():
     return "Hello world"
@@ -34,9 +32,13 @@ def login():
         result = cursor.fetchone()
         cursor.close()
 
+
         if result:
             email = result[0]
             password = result[1]
+            print(password)
+            print("----------")
+            print(auth.password)
             
             if auth.password == password and auth.email == email:
                 return createJWT(auth.email, os.environ.get("JWT_SECRET", "default_secret"), True)
@@ -82,14 +84,35 @@ def validate():
         print(f"Token validation error: {e}")
         return "invalid token", 401
 
+@server.route("/register", methods=["POST"])
+def register():
+    try:
+        data= request.get_json()
+        if not data or not "email" in data or not "password" in data:
+            return "Missing Credentials", 400
+        email = data["email"]
+        password = data["password"]
+
+        cursor = mysql.connection.cursor()
+        user = cursor.execute(
+            "SELECT email, password FROM User WHERE email = %s", (email,)
+        )
+
+        if user: 
+            return 'User Already Exisits', 400
+        
+        cursor.execute(
+            'INSERT INTO User (email,password) VALUES (%s,%s)', (email,password)
+        )
+        mysql.connection.commit()
+        cursor.close()
+        return 'User Created', 201  
+
+    except Exception as e:
+        print(e)
+        return "Internal Error",500
+
+
 
 if __name__ == "__main__":
     server.run(host="0.0.0.0", port=6000)
-
-
-
-
-
-
-
-

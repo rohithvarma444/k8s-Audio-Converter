@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Converter - Upload</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="upload-container">
+        <div class="header">
+            <h1>Upload Video</h1>
+            <button id="logout-btn" class="logout-btn">Logout</button>
+        </div>
+        
+        <div class="upload-area" id="upload-area">
+            <p>Drag & drop your video file here or click to select</p>
+            <input type="file" id="file-input" style="display: none" accept="video/*">
+        </div>
+        
+        <div class="file-info" id="file-info"></div>
+        
+        <div class="progress-bar" id="progress-container" style="display: none">
+            <div class="progress" id="progress"></div>
+        </div>
+        
+        <button id="upload-btn" disabled>Upload</button>
+        <div id="upload-message" class="message"></div>
+    </div>
+    
+    <script src="/static/js/upload.js"></script>
+</body>
+</html>

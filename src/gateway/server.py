@@ -1,11 +1,11 @@
-from flask import Flask, request
+from flask import Flask, request, send_from_directory, render_template, jsonify
 import os, gridfs, pika, json
 from flask_pymongo import PyMongo 
 from auth import validate
 from auth_svc import access
 from storage import utils
 
-server = Flask(__name__)
+server = Flask(__name__, static_folder='static', template_folder='templates')
 server.config["MONGO_URI"] = "mongodb://host.minikube.internal:27017/videos"
 mongo = PyMongo(server)
 
@@ -15,12 +15,32 @@ connection = pika.BlockingConnection(pika.ConnectionParameters("rabbitmq"))
 channel = connection.channel()  
 
 
+@server.route('/')
+def index():
+    return render_template('index.html')
+
+
+@server.route('/upload-page')
+def upload_page():
+    return render_template('upload.html')
+
+
 @server.route('/login', methods=["POST"])
 def login():
     token, err = access.login(request)
 
     if not err:
         return token
+    else:
+        return err
+
+
+@server.route('/register', methods=["POST"])
+def register():
+    message, err = access.register(request)
+    
+    if not err:
+        return message, 201
     else:
         return err
 
