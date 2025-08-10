@@ -4,4 +4,3 @@ metadata:
   name: rabbitmq-configmap
 data:
   PLACEHOLDER: "NONE"
-

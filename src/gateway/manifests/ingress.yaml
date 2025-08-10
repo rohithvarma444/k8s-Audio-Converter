@@ -3,9 +3,10 @@ kind: Ingress
 metadata:
   name: gateway-ingress
   annotations:
-     nginx.ingress.kubernetes.io/proxy-body-size: "0"
-     nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-     nginx.ingress.kubernetes.io/proxy-write-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-body-size: "0"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    #nginx.ingress.kubernetes.io/proxy-max-temp-file-size: "1024m"
 spec:
   rules:
     - host: mp3converter.com
@@ -15,7 +16,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: gateway-service
+                name: gateway
                 port:
                   number: 8080
-

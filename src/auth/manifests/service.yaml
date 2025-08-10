@@ -5,9 +5,8 @@ metadata:
 spec:
   selector:
     app: auth
+  type: ClusterIP
   ports:
-  - port: 6000
-    targetPort: 6000
-    protocol: TCP
-
-   
+    - port: 5000
+      targetPort: 5000
+      protocol: TCP

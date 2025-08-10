@@ -1,31 +1,25 @@
-from flask import Flask, request, send_from_directory, render_template, jsonify
 import os, gridfs, pika, json
-from flask_pymongo import PyMongo 
+from flask import Flask, request, send_file
+from flask_pymongo import PyMongo
 from auth import validate
 from auth_svc import access
-from storage import utils
+from storage import util
+from bson.objectid import ObjectId
 
-server = Flask(__name__, static_folder='static', template_folder='templates')
-server.config["MONGO_URI"] = "mongodb://host.minikube.internal:27017/videos"
-mongo = PyMongo(server)
+server = Flask(__name__)
 
-fs = gridfs.GridFS(mongo.db)
+mongo_video = PyMongo(server, uri="mongodb://host.minikube.internal:27017/videos")
+
+mongo_mp3 = PyMongo(server, uri="mongodb://host.minikube.internal:27017/mp3s")
+
+fs_videos = gridfs.GridFS(mongo_video.db)
+fs_mp3s = gridfs.GridFS(mongo_mp3.db)
 
 connection = pika.BlockingConnection(pika.ConnectionParameters("rabbitmq"))
-channel = connection.channel()  
+channel = connection.channel()
 
 
-@server.route('/')
-def index():
-    return render_template('index.html')
-
-
-@server.route('/upload-page')
-def upload_page():
-    return render_template('upload.html')
-
-
-@server.route('/login', methods=["POST"])
+@server.route("/login", methods=["POST"])
 def login():
     token, err = access.login(request)
 
@@ -35,39 +29,54 @@ def login():
         return err
 
 
-@server.route('/register', methods=["POST"])
-def register():
-    message, err = access.register(request)
-    
-    if not err:
-        return message, 201
-    else:
-        return err
-
-
-@server.route('/upload', methods=["POST"])
+@server.route("/upload", methods=["POST"])
 def upload():
-    access_token, err = validate.token(request)
+    access, err = validate.token(request)
 
     if err:
         return err
 
-    access_data = json.loads(access_token)
+    access = json.loads(access)
 
-    if access_data["admin"]:
-        if len(request.files) != 1:
-            return "Exactly one file is allowed", 400
-        
+    if access["admin"]:
+        if len(request.files) > 1 or len(request.files) < 1:
+            return "exactly 1 file required", 400
+
         for _, f in request.files.items():
-            err = utils.upload(f, fs, channel, access_data)
+            err = util.upload(f, fs_videos, channel, access)
 
-            if err: 
+            if err:
                 return err
-        
-        return "success", 200
-    else:
-        return "unauthorized", 401
 
-    
+        return "success!", 200
+    else:
+        return "not authorized", 401
+
+
+@server.route("/download", methods=["GET"])
+def download():
+    access, err = validate.token(request)
+
+    if err:
+        return err
+
+    access = json.loads(access)
+
+    if access["admin"]:
+        fid_string = request.args.get("fid")
+
+        if not fid_string:
+            return "fid is required", 400
+
+        try:
+            out = fs_mp3s.get(ObjectId(fid_string))
+            return send_file(out, download_name=f"{fid_string}.mp3")
+        except Exception as err:
+            print(err)
+            return "internal server error", 500
+
+    return "not authorized", 401
+
+
 if __name__ == "__main__":
     server.run(host="0.0.0.0", port=8080)

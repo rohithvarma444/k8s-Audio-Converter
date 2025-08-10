@@ -3,11 +3,10 @@ kind: StatefulSet
 metadata:
   name: rabbitmq
 spec:
-  replicas: 1
+  serviceName: "not-applicable"
   selector:
     matchLabels:
       app: rabbitmq
-  serviceName: rabbitmq-service
   template:
     metadata:
       labels:
@@ -29,10 +28,9 @@ spec:
             - secretRef:
                 name: rabbitmq-secret
           volumeMounts:
-            - name: rabbitmq-storage
-              mountPath: /var/lib/rabbitmq
+            - mountPath: "/var/lib/rabbitmq"
+              name: rabbitmq-volume
       volumes:
-        - name: rabbitmq-storage
+        - name: rabbitmq-volume
           persistentVolumeClaim:
             claimName: rabbitmq-pvc
-        
